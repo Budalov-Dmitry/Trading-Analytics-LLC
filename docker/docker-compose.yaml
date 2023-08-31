@@ -1,0 +1,245 @@
+version: '3'
+
+networks:
+  vk-network:
+    driver: bridge
+
+services:
+
+        vk:
+            container_name: vk
+            build:
+                context: ./php-fpm
+                args:
+                    - timezone=${TZ}
+            networks:
+                - vk-network
+            ports:
+                - "9000:9000"
+            volumes:
+                - ./../vk:/vk:rw,cached
+                - vk_log:/vk/var/log
+                - ./../vk/storage/app/public:/vk/public/files
+            env_file:
+                - .env
+            depends_on:
+                - redis
+                - memcached
+                - master-db
+#                - db-slave-1
+#                - db-slave-2
+        vk1:
+            container_name: vk1
+            build:
+                context: ./php-fpm
+                args:
+                    - timezone=${TZ}
+            networks:
+                - vk-network
+            ports:
+                - "9001:9000"
+            volumes:
+                - ./../vk:/vk:rw,cached
+                - vk_log:/vk/var/log
+                - ./../vk/storage/app/public:/vk/public/files
+            env_file:
+                - .env
+            depends_on:
+                - redis
+                - memcached
+                - master-db
+#                - db-slave-1
+#                - db-slave-2
+        vk2:
+            container_name: vk2
+            build:
+                context: ./php-fpm
+                args:
+                    - timezone=${TZ}
+            networks:
+                - vk-network
+            ports:
+                - "9002:9000"
+            volumes:
+                - ./../vk:/vk:rw,cached
+                - vk_log:/vk/var/log
+                - ./../vk/storage/app/public:/vk/public/files
+            env_file:
+                - .env
+            depends_on:
+                - redis
+                - memcached
+                - master-db
+#                - db-slave-1
+#                - db-slave-2
+        vk3:
+            container_name: vk3
+            build:
+                context: ./php-fpm
+                args:
+                    - timezone=${TZ}
+            networks:
+                - vk-network
+            ports:
+                - "9003:9000"
+            volumes:
+                - ./../vk:/vk:rw,cached
+                - vk_log:/vk/var/log
+                - ./../vk/storage/app/public:/vk/public/files
+            env_file:
+                - .env
+            depends_on:
+                - redis
+                - memcached
+                - master-db
+#                - db-slave-1
+#                - db-slave-2
+        vk4:
+            container_name: vk4
+            build:
+                context: ./php-fpm
+                args:
+                    - timezone=${TZ}
+            networks:
+                - vk-network
+            ports:
+                - "9004:9000"
+            volumes:
+                - ./../vk:/vk:rw,cached
+                - vk_log:/vk/var/log
+                - ./../vk/storage/app/public:/vk/public/files
+            env_file:
+                - .env
+            depends_on:
+                - redis
+                - memcached
+                - master-db
+#                - db-slave-1
+#                - db-slave-2
+        vk5:
+            container_name: vk5
+            build:
+                context: ./php-fpm
+                args:
+                    - timezone=${TZ}
+            networks:
+                - vk-network
+            ports:
+                - "9005:9000"
+            volumes:
+                - ./../vk:/vk:rw,cached
+                - vk_log:/vk/var/log
+                - ./../vk/storage/app/public:/vk/public/files
+            env_file:
+                - .env
+            depends_on:
+                - redis
+                - memcached
+                - master-db
+#                - db-slave-1
+#                - db-slave-2
+
+
+
+        nginx:
+            container_name: nginx
+            build:
+                context: ./nginx
+                args:
+                    - timezone=${TZ}
+            ports:
+                - "81:80"
+                - "443:443"
+            networks:
+                - vk-network
+            depends_on:
+                - vk
+            volumes:
+                - ./../vk/public:/vk/public
+                - ./nginx/ssl:/etc/nginx/ssl
+                - ./nginx/conf.d:/etc/nginx/conf.d
+                - ./nginx/nginx_log:/var/log/nginx
+                - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+            env_file:
+                - .env
+            command: /bin/bash -c "exec nginx -g 'daemon off;'"
+
+        redis:
+            container_name: redis
+            image: redis:latest
+            ports:
+                - "6379:6379"
+            networks:
+                - vk-network
+
+#        postgres:
+#            image: postgres:13.3
+#            environment:
+#                POSTGRES_DB: "habrdb"
+#                POSTGRES_USER: "habrpguser"
+#                POSTGRES_PASSWORD: "pgpwd4habr"
+#            ports:
+#                - "5432:5432"
+#            networks:
+#                - vk-network
+
+        memcached:
+            container_name: memcached
+            image: memcached:latest
+            ports:
+                    - "11211:11211"
+            networks:
+                - vk-network
+
+        master-db:
+            container_name: db-master
+            image: mysql:latest
+            env_file:
+                - ./db/master/.env.master
+            ports:
+                - "4406:3306"
+            volumes:
+                - ./db/master/master.sql:/docker-entrypoint-initdb.d/start.sql
+                - ./db/master/mysql.master.cnf:/etc/mysql/conf.d/mysql.master.cnf
+                - ./db/master/.data/mysql:/var/lib/mysql:rw
+            networks:
+                - vk-network
+
+#        db-slave-1:
+#            container_name: db-slave-1
+#            image: mysql:latest
+#            env_file:
+#                - db/slaves/slave_1/.env.slave
+#            depends_on:
+#                -  master-db
+#            ports:
+#                - "4407:3306"
+#            volumes:
+#                - ./db/slaves/slave.sql:/docker-entrypoint-initdb.d/start.sql
+#                - ./db/slaves/slave_1/mysql.slave.cnf:/etc/mysql/conf.d/mysql.slave.cnf
+#                - ./db/slaves/slave_1/.data/mysql:/var/lib/mysql:rw
+#            networks:
+#                - vk-network
+#
+#        db-slave-2:
+#            container_name: db-slave-2
+#            image: mysql:latest
+#            env_file:
+#                - db/slaves/slave_2/.env.slave
+#            depends_on:
+#                - master-db
+#            ports:
+#                - "5506:3306"
+#            volumes:
+#                - ./db/slaves/slave.sql:/docker-entrypoint-initdb.d/start.sql
+#                - ./db/slaves/slave_2/mysql.slave.cnf:/etc/mysql/conf.d/mysql.slave.cnf
+#                - ./db/slaves/slave_2/.data/mysql:/var/lib/mysql:rw
+#            networks:
+#                - vk-network
+
+volumes:
+    nginx_log:
+    vk_log:
+    db:
+        driver: local
+
